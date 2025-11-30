@@ -14,7 +14,6 @@ public class Pesanan {
     private Diskon diskonDiterapkan;
     private String nomorPesanan;
     private Date tanggalPesanan;
-    private static final String FILE_STRUK = "struk_pesanan.txt";
 
     /**
      * Konstruktor untuk Pesanan

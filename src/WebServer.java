@@ -61,16 +61,23 @@ public class WebServer {
             grouped.put("Minuman", new ArrayList<>());
             
             for (MenuItem item : daftarMenu) {
+                // Skip diskon items for web display
+                if (item instanceof Diskon) {
+                    continue;
+                }
                 Map<String, Object> menuMap = new HashMap<>();
                 menuMap.put("nama", item.getNama());
                 menuMap.put("harga", (int) item.getHarga());
                 menuMap.put("kategori", item.getKategori());
-                grouped.get(item.getKategori()).add(menuMap);
+                List<Map<String, Object>> categoryList = grouped.get(item.getKategori());
+                if (categoryList != null) {
+                    categoryList.add(menuMap);
+                }
             }
             ctx.json(grouped);
         });
         
-        // Add new menu item
+        // Add new menu item (only Makanan or Minuman via web API)
         app.post("/api/menu", ctx -> {
             @SuppressWarnings("unchecked")
             Map<String, Object> body = objectMapper.readValue(ctx.body(), Map.class);
@@ -79,10 +86,13 @@ public class WebServer {
             String kategori = (String) body.get("kategori");
             
             MenuItem newItem;
-            if (kategori.equals("Makanan")) {
+            if ("Makanan".equals(kategori)) {
                 newItem = new Makanan(nama, harga, "Umum");
-            } else {
+            } else if ("Minuman".equals(kategori)) {
                 newItem = new Minuman(nama, harga, "Umum");
+            } else {
+                ctx.status(400).result("Invalid category. Only 'Makanan' or 'Minuman' supported.");
+                return;
             }
             daftarMenu.add(newItem);
             

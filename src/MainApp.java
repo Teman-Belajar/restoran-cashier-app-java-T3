@@ -213,6 +213,7 @@ public class MainApp {
             }
         }
 
+        // Diskon items have 0 base price as they represent percentage discounts
         Diskon diskonBaru = new Diskon(nama, 0, persentase / 100);
         menu.tambahItem(diskonBaru);
     }

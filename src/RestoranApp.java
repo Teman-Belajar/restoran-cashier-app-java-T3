@@ -8,22 +8,22 @@ public class RestoranApp {
     private static final int MINIMUM_B1G1_AMOUNT = 50000;
     private static final int MINIMUM_DISCOUNT_AMOUNT = 100000;
 
-    // Menggunakan ArrayList<Menu> untuk menyimpan daftar menu
-    private static ArrayList<Menu> daftarMenu = new ArrayList<>();
+    // Menggunakan ArrayList<MenuItem> untuk menyimpan daftar menu
+    private static ArrayList<MenuItem> daftarMenu = new ArrayList<>();
     private static Scanner scanner = new Scanner(System.in);
 
     public static void inisialisasiMenu() {
         // Kategori Makanan (minimal 4)
-        daftarMenu.add(new Menu("Nasi Goreng", 25000, "Makanan"));
-        daftarMenu.add(new Menu("Mie Goreng", 22000, "Makanan"));
-        daftarMenu.add(new Menu("Ayam Bakar", 35000, "Makanan"));
-        daftarMenu.add(new Menu("Sate Ayam", 30000, "Makanan"));
+        daftarMenu.add(new Makanan("Nasi Goreng", 25000, "Nasi"));
+        daftarMenu.add(new Makanan("Mie Goreng", 22000, "Mie"));
+        daftarMenu.add(new Makanan("Ayam Bakar", 35000, "Lauk"));
+        daftarMenu.add(new Makanan("Sate Ayam", 30000, "Lauk"));
 
         // Kategori Minuman (minimal 4)
-        daftarMenu.add(new Menu("Es Teh Manis", 8000, "Minuman"));
-        daftarMenu.add(new Menu("Es Jeruk", 10000, "Minuman"));
-        daftarMenu.add(new Menu("Kopi Hitam", 12000, "Minuman"));
-        daftarMenu.add(new Menu("Jus Alpukat", 15000, "Minuman"));
+        daftarMenu.add(new Minuman("Es Teh Manis", 8000, "Dingin"));
+        daftarMenu.add(new Minuman("Es Jeruk", 10000, "Dingin"));
+        daftarMenu.add(new Minuman("Kopi Hitam", 12000, "Panas"));
+        daftarMenu.add(new Minuman("Jus Alpukat", 15000, "Jus"));
     }
 
     // Menampilkan menu dalam format terkelompok menggunakan for-each loop
@@ -33,9 +33,9 @@ public class RestoranApp {
         // Tampilkan Makanan menggunakan for-each loop
         System.out.println("\n--- MAKANAN ---");
         int nomor = 1;
-        for (Menu menu : daftarMenu) {
-            if (menu.getKategori().equals("Makanan")) {
-                System.out.println(nomor + ". " + menu.getNama() + " - Rp " + menu.getHarga());
+        for (MenuItem item : daftarMenu) {
+            if (item.getKategori().equals("Makanan")) {
+                System.out.println(nomor + ". " + item.getNama() + " - Rp " + (int) item.getHarga());
                 nomor++;
             }
         }
@@ -43,9 +43,9 @@ public class RestoranApp {
         // Tampilkan Minuman menggunakan for-each loop
         System.out.println("\n--- MINUMAN ---");
         nomor = 1;
-        for (Menu menu : daftarMenu) {
-            if (menu.getKategori().equals("Minuman")) {
-                System.out.println(nomor + ". " + menu.getNama() + " - Rp " + menu.getHarga());
+        for (MenuItem item : daftarMenu) {
+            if (item.getKategori().equals("Minuman")) {
+                System.out.println(nomor + ". " + item.getNama() + " - Rp " + (int) item.getHarga());
                 nomor++;
             }
         }
@@ -56,18 +56,18 @@ public class RestoranApp {
     public static void tampilkanMenuDenganNomor() {
         System.out.println("\n========= DAFTAR MENU =========");
         int nomor = 1;
-        for (Menu menu : daftarMenu) {
-            System.out.println(nomor + ". " + menu.getNama() + " (Rp " + menu.getHarga() + ") - " + menu.getKategori());
+        for (MenuItem item : daftarMenu) {
+            System.out.println(nomor + ". " + item.getNama() + " (Rp " + (int) item.getHarga() + ") - " + item.getKategori());
             nomor++;
         }
         System.out.println("================================\n");
     }
 
     // Mencari menu berdasarkan nama
-    public static Menu cariMenu(String namaMenu) {
-        for (Menu menu : daftarMenu) {
-            if (menu.getNama().equalsIgnoreCase(namaMenu)) {
-                return menu;
+    public static MenuItem cariMenu(String namaMenu) {
+        for (MenuItem item : daftarMenu) {
+            if (item.getNama().equalsIgnoreCase(namaMenu)) {
+                return item;
             }
         }
         return null;
@@ -77,7 +77,7 @@ public class RestoranApp {
     public static void pemesananPelanggan() {
         ArrayList<String> namaPesanan = new ArrayList<>();
         ArrayList<Integer> jumlahPesanan = new ArrayList<>();
-        ArrayList<Menu> menuPesanan = new ArrayList<>();
+        ArrayList<MenuItem> menuPesanan = new ArrayList<>();
 
         tampilkanMenu();
 
@@ -94,7 +94,7 @@ public class RestoranApp {
             }
 
             // Validasi input menu dengan while loop - berulang jika tidak valid
-            Menu menuDitemukan = cariMenu(input);
+            MenuItem menuDitemukan = cariMenu(input);
             while (menuDitemukan == null) {
                 System.out.println("Menu tidak ditemukan! Silakan masukkan nama menu yang valid.");
                 System.out.print("Nama menu (atau 'selesai'): ");
@@ -146,15 +146,15 @@ public class RestoranApp {
 
         // Hitung subtotal dan lacak minuman
         for (int i = 0; i < menuPesanan.size(); i++) {
-            Menu menu = menuPesanan.get(i);
+            MenuItem item = menuPesanan.get(i);
             int qty = jumlahPesanan.get(i);
-            subtotal += menu.getHarga() * qty;
+            subtotal += (int) item.getHarga() * qty;
 
             // Melacak jumlah minuman untuk B1G1
-            if (menu.getKategori().equals("Minuman")) {
+            if (item.getKategori().equals("Minuman")) {
                 jumlahMinuman += qty;
-                if (menu.getHarga() < hargaMinumanTermurah) {
-                    hargaMinumanTermurah = menu.getHarga();
+                if ((int) item.getHarga() < hargaMinumanTermurah) {
+                    hargaMinumanTermurah = (int) item.getHarga();
                 }
             }
         }
@@ -193,7 +193,7 @@ public class RestoranApp {
 
     // Mencetak struk pesanan
     public static void cetakStruk(ArrayList<String> namaPesanan, ArrayList<Integer> jumlahPesanan,
-                                   ArrayList<Menu> menuPesanan, int subtotal, int diskonB1G1,
+                                   ArrayList<MenuItem> menuPesanan, int subtotal, int diskonB1G1,
                                    int subtotalSetelahB1G1, int pajak, int biayaPelayanan,
                                    int totalSementara, int diskon10Persen, int totalAkhir) {
 
@@ -202,11 +202,11 @@ public class RestoranApp {
 
         // Menggunakan for loop untuk mencetak detail item
         for (int i = 0; i < menuPesanan.size(); i++) {
-            Menu menu = menuPesanan.get(i);
+            MenuItem item = menuPesanan.get(i);
             int qty = jumlahPesanan.get(i);
-            int totalItem = menu.getHarga() * qty;
+            int totalItem = (int) item.getHarga() * qty;
             System.out.printf("%-15s %d x Rp %,d = Rp %,d%n",
-                    menu.getNama(), qty, menu.getHarga(), totalItem);
+                    item.getNama(), qty, (int) item.getHarga(), totalItem);
         }
 
         System.out.println("---------------------------------------");
@@ -301,6 +301,7 @@ public class RestoranApp {
 
         // Pilih kategori dengan switch
         String kategori = "";
+        String jenis = "";
         boolean kategoriValid = false;
         while (!kategoriValid) {
             System.out.print("Kategori (1=Makanan, 2=Minuman): ");
@@ -308,10 +309,14 @@ public class RestoranApp {
             switch (kat) {
                 case "1":
                     kategori = "Makanan";
+                    System.out.print("Jenis makanan (contoh: Nasi, Mie, Lauk): ");
+                    jenis = scanner.nextLine().trim();
                     kategoriValid = true;
                     break;
                 case "2":
                     kategori = "Minuman";
+                    System.out.print("Jenis minuman (contoh: Dingin, Panas, Jus): ");
+                    jenis = scanner.nextLine().trim();
                     kategoriValid = true;
                     break;
                 default:
@@ -319,7 +324,11 @@ public class RestoranApp {
             }
         }
 
-        daftarMenu.add(new Menu(nama, harga, kategori));
+        if (kategori.equals("Makanan")) {
+            daftarMenu.add(new Makanan(nama, harga, jenis));
+        } else {
+            daftarMenu.add(new Minuman(nama, harga, jenis));
+        }
         System.out.println("Menu '" + nama + "' berhasil ditambahkan!\n");
     }
 
@@ -342,8 +351,8 @@ public class RestoranApp {
             return;
         }
 
-        Menu menuPilih = daftarMenu.get(nomor - 1);
-        System.out.println("Menu dipilih: " + menuPilih.getNama() + " (Harga saat ini: Rp " + menuPilih.getHarga() + ")");
+        MenuItem menuPilih = daftarMenu.get(nomor - 1);
+        System.out.println("Menu dipilih: " + menuPilih.getNama() + " (Harga saat ini: Rp " + (int) menuPilih.getHarga() + ")");
 
         // Konfirmasi dengan while loop untuk validasi input
         String konfirmasi = "";
@@ -397,8 +406,8 @@ public class RestoranApp {
             return;
         }
 
-        Menu menuPilih = daftarMenu.get(nomor - 1);
-        System.out.println("Menu dipilih: " + menuPilih.getNama() + " (Rp " + menuPilih.getHarga() + ")");
+        MenuItem menuPilih = daftarMenu.get(nomor - 1);
+        System.out.println("Menu dipilih: " + menuPilih.getNama() + " (Rp " + (int) menuPilih.getHarga() + ")");
 
         // Konfirmasi dengan while loop untuk validasi input
         String konfirmasi = "";

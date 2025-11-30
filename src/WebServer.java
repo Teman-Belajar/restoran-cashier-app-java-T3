@@ -8,7 +8,7 @@ import java.util.List;
 public class WebServer {
     
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static ArrayList<Menu> daftarMenu = new ArrayList<>();
+    private static ArrayList<MenuItem> daftarMenu = new ArrayList<>();
     
     // Konstanta untuk biaya dan diskon
     private static final int BIAYA_PELAYANAN = 20000;
@@ -18,16 +18,16 @@ public class WebServer {
     public static void inisialisasiMenu() {
         if (daftarMenu.isEmpty()) {
             // Kategori Makanan (minimal 4)
-            daftarMenu.add(new Menu("Nasi Goreng", 25000, "Makanan"));
-            daftarMenu.add(new Menu("Mie Goreng", 22000, "Makanan"));
-            daftarMenu.add(new Menu("Ayam Bakar", 35000, "Makanan"));
-            daftarMenu.add(new Menu("Sate Ayam", 30000, "Makanan"));
+            daftarMenu.add(new Makanan("Nasi Goreng", 25000, "Nasi"));
+            daftarMenu.add(new Makanan("Mie Goreng", 22000, "Mie"));
+            daftarMenu.add(new Makanan("Ayam Bakar", 35000, "Lauk"));
+            daftarMenu.add(new Makanan("Sate Ayam", 30000, "Lauk"));
 
             // Kategori Minuman (minimal 4)
-            daftarMenu.add(new Menu("Es Teh Manis", 8000, "Minuman"));
-            daftarMenu.add(new Menu("Es Jeruk", 10000, "Minuman"));
-            daftarMenu.add(new Menu("Kopi Hitam", 12000, "Minuman"));
-            daftarMenu.add(new Menu("Jus Alpukat", 15000, "Minuman"));
+            daftarMenu.add(new Minuman("Es Teh Manis", 8000, "Dingin"));
+            daftarMenu.add(new Minuman("Es Jeruk", 10000, "Dingin"));
+            daftarMenu.add(new Minuman("Kopi Hitam", 12000, "Panas"));
+            daftarMenu.add(new Minuman("Jus Alpukat", 15000, "Jus"));
         }
     }
     
@@ -43,26 +43,54 @@ public class WebServer {
         
         // Get all menu items
         app.get("/api/menu", ctx -> {
-            ctx.json(daftarMenu);
+            List<Map<String, Object>> menuList = new ArrayList<>();
+            for (MenuItem item : daftarMenu) {
+                Map<String, Object> menuMap = new HashMap<>();
+                menuMap.put("nama", item.getNama());
+                menuMap.put("harga", (int) item.getHarga());
+                menuMap.put("kategori", item.getKategori());
+                menuList.add(menuMap);
+            }
+            ctx.json(menuList);
         });
         
         // Get menu grouped by category
         app.get("/api/menu/grouped", ctx -> {
-            Map<String, List<Menu>> grouped = new HashMap<>();
+            Map<String, List<Map<String, Object>>> grouped = new HashMap<>();
             grouped.put("Makanan", new ArrayList<>());
             grouped.put("Minuman", new ArrayList<>());
             
-            for (Menu menu : daftarMenu) {
-                grouped.get(menu.getKategori()).add(menu);
+            for (MenuItem item : daftarMenu) {
+                Map<String, Object> menuMap = new HashMap<>();
+                menuMap.put("nama", item.getNama());
+                menuMap.put("harga", (int) item.getHarga());
+                menuMap.put("kategori", item.getKategori());
+                grouped.get(item.getKategori()).add(menuMap);
             }
             ctx.json(grouped);
         });
         
         // Add new menu item
         app.post("/api/menu", ctx -> {
-            Menu newMenu = objectMapper.readValue(ctx.body(), Menu.class);
-            daftarMenu.add(newMenu);
-            ctx.status(201).json(newMenu);
+            @SuppressWarnings("unchecked")
+            Map<String, Object> body = objectMapper.readValue(ctx.body(), Map.class);
+            String nama = (String) body.get("nama");
+            int harga = ((Number) body.get("harga")).intValue();
+            String kategori = (String) body.get("kategori");
+            
+            MenuItem newItem;
+            if (kategori.equals("Makanan")) {
+                newItem = new Makanan(nama, harga, "Umum");
+            } else {
+                newItem = new Minuman(nama, harga, "Umum");
+            }
+            daftarMenu.add(newItem);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("nama", newItem.getNama());
+            response.put("harga", (int) newItem.getHarga());
+            response.put("kategori", newItem.getKategori());
+            ctx.status(201).json(response);
         });
         
         // Update menu price
@@ -73,7 +101,13 @@ public class WebServer {
                 Map<String, Object> body = objectMapper.readValue(ctx.body(), Map.class);
                 int newPrice = ((Number) body.get("harga")).intValue();
                 daftarMenu.get(index).setHarga(newPrice);
-                ctx.json(daftarMenu.get(index));
+                
+                MenuItem item = daftarMenu.get(index);
+                Map<String, Object> response = new HashMap<>();
+                response.put("nama", item.getNama());
+                response.put("harga", (int) item.getHarga());
+                response.put("kategori", item.getKategori());
+                ctx.json(response);
             } else {
                 ctx.status(404).result("Menu not found");
             }
@@ -83,8 +117,12 @@ public class WebServer {
         app.delete("/api/menu/{index}", ctx -> {
             int index = Integer.parseInt(ctx.pathParam("index"));
             if (index >= 0 && index < daftarMenu.size()) {
-                Menu removed = daftarMenu.remove(index);
-                ctx.json(removed);
+                MenuItem removed = daftarMenu.remove(index);
+                Map<String, Object> response = new HashMap<>();
+                response.put("nama", removed.getNama());
+                response.put("harga", (int) removed.getHarga());
+                response.put("kategori", removed.getKategori());
+                ctx.json(response);
             } else {
                 ctx.status(404).result("Menu not found");
             }
@@ -112,23 +150,23 @@ public class WebServer {
         int hargaMinumanTermurah = 0;
         
         for (OrderItem item : items) {
-            Menu menu = findMenuByName(item.nama);
-            if (menu != null) {
-                int totalItem = menu.getHarga() * item.jumlah;
+            MenuItem menuItem = findMenuByName(item.nama);
+            if (menuItem != null) {
+                int totalItem = (int) menuItem.getHarga() * item.jumlah;
                 subtotal += totalItem;
                 
                 OrderResultItem resultItem = new OrderResultItem();
-                resultItem.nama = menu.getNama();
-                resultItem.harga = menu.getHarga();
+                resultItem.nama = menuItem.getNama();
+                resultItem.harga = (int) menuItem.getHarga();
                 resultItem.jumlah = item.jumlah;
                 resultItem.total = totalItem;
                 result.items.add(resultItem);
                 
-                if (menu.getKategori().equals("Minuman")) {
+                if (menuItem.getKategori().equals("Minuman")) {
                     jumlahMinuman += item.jumlah;
                     // Track cheapest beverage price
-                    if (hargaMinumanTermurah == 0 || menu.getHarga() < hargaMinumanTermurah) {
-                        hargaMinumanTermurah = menu.getHarga();
+                    if (hargaMinumanTermurah == 0 || (int) menuItem.getHarga() < hargaMinumanTermurah) {
+                        hargaMinumanTermurah = (int) menuItem.getHarga();
                     }
                 }
             }
@@ -168,10 +206,10 @@ public class WebServer {
         return result;
     }
     
-    private static Menu findMenuByName(String nama) {
-        for (Menu menu : daftarMenu) {
-            if (menu.getNama().equalsIgnoreCase(nama)) {
-                return menu;
+    private static MenuItem findMenuByName(String nama) {
+        for (MenuItem item : daftarMenu) {
+            if (item.getNama().equalsIgnoreCase(nama)) {
+                return item;
             }
         }
         return null;

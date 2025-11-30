@@ -43,3 +43,7 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### Application Data Files ###
+menu_data.txt
+struk_*.txt
